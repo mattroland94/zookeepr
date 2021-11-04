@@ -40,8 +40,7 @@ const getAnimals = (formData = {}) => {
   .then(animalData => {
     console.log(animalData);
     printResults(animalData);
-  })
-
+  });
 };
 
 const handleGetAnimalsSubmit = event => {
