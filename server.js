@@ -1,15 +1,21 @@
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3001;
-const { animals } = require('./data/animals');
 const fs = require('fs');
 const path = require('path');
+const express = require('express');
+const { animals } = require('./data/animals');
+
+const PORT = process.env.PORT || 3001;
+const app = express();
+
+app.use(express.static('public'));
+app.use(express.urlencoded({ extend: true }));
+app.use(express.json());
+
 
 function filterByQuery(query, animalsArray) {
     let personalityTraitsArray = [];
   // Note that we save the animalsArray as filteredResults here:
-  let filteredResults = animalsArray;
-  if (query.personalityTraits) {
+    let filteredResults = animalsArray;
+    if (query.personalityTraits) {
     // Save personalityTraits as a dedicated array.
     // If personalityTraits is a string, place it into a new array and save.
     if (typeof query.personalityTraits === 'string') {
@@ -49,14 +55,6 @@ function findByID(id, animalsArray) {
     return result;
 }
 
-app.get('/api/animals', (req, res) => {
-    let results = animals;
-    if (req.query) {
-        results = filterByQuery(req.query, results);
-    }
-    res.json(results);
-});
-
 function createNewAnimal(body, animalsArray) {
   const animal = body;
   animalsArray.push(animal);
@@ -64,7 +62,7 @@ function createNewAnimal(body, animalsArray) {
     path.join(__dirnam, './data/animals.json'),
     JSON.stringify({ animals: animalsArray }, null, 2)
   );
-  return body;
+  return animal;
 }
 
 function validateAnimal(animal) {
@@ -83,10 +81,13 @@ function validateAnimal(animal) {
   return true;
 }
 
-// parse incoming string or array data
-app.use(express.urlencoded({ extend: true }));
-// parse incoming JSON data
-app.use(express.json());
+app.get('/api/animals', (req, res) => {
+    let results = animals;
+    if (req.query) {
+        results = filterByQuery(req.query, results);
+    }
+    res.json(results);
+});
 
 app.get('/api/animals/:id', (req, res) => {
     const result = findByID(req.params.id, animals);
@@ -109,6 +110,18 @@ app.post('/api/animals', (req, res) => {
     const animal = createNewAnimal(req.body, animals);
     res.json(animal);
   }
+});
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/index.html'));
+});
+
+app.get('/animals', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/animals.html'));
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, './public/index.html'));
 });
 
 app.listen(PORT, () => {
